@@ -32,13 +32,6 @@ instance_groups:
   stemcell: default
   networks: [{name: default}]
   update: {serial: true, max_in_flight: 1}
-  properties:
-    username: cellbroker
-    password: ((cellbroker_password))
-    cookie_secret: ((cell_cookie_secret))
-    max_containers: ((cell_max_containers))
-    fetch_images: true
-    update_containers: true
   jobs:
   # ship all the logs
   - name: remote-syslog
@@ -70,6 +63,12 @@ instance_groups:
       cf-containers-broker:
         as: cell-agent
     properties:
+      username: cellbroker
+      password: ((cellbroker_password))
+      cookie_secret: ((cell_cookie_secret))
+      max_containers: ((cell_max_containers))
+      fetch_images: true
+      update_containers: true
       services:
       - name: dingo-postgresql
         id: beb5973c-e1b2-11e5-a736-c7c0b526363d

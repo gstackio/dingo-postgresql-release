@@ -82,5 +82,12 @@ cf:
   skip_ssl_validation: <%= p("cf.skip_ssl_validation") %>
 <% end %>
 
+<%
+  catalog_services = nil
+  if_p("services") do |services|
+    catalog_services = services
+  end
+  catalog_services ||= link("cell").p("services")
+-%>
 catalog:
-  services: <%= JSON.pretty_generate(p('services')) %>
+  services: <%= JSON.pretty_generate(catalog_services) %>

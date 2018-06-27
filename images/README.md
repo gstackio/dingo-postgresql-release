@@ -134,7 +134,10 @@ The output will look like:
 
 ### Running registrator
 
-Containers do not know their own public host:port information. In our solution we use [registrator](https://github.com/gliderlabs/registrator) (currently a forked version with [PR #280](https://github.com/gliderlabs/registrator/pull/280)\).
+Containers do not know their own public host:port information. In our solution
+we use [registrator](https://github.com/gliderlabs/registrator) (currently a
+[forked version](https://github.com/drnic/registrator/tree/hostname-override)
+with [PR #280](https://github.com/gliderlabs/registrator/pull/280)\).
 
 ```
 _docker rm -f registrator

@@ -143,6 +143,7 @@ module JobSpecs
     end
   end
 end
+
 module DockerImagePackaging
   include CommonDirs
 
@@ -182,7 +183,7 @@ module DockerImagePackaging
 
       # Blob.new(source, target_name, prefix)
       blobs = Dir.glob("*/").map! do |d|
-               Blob.new(d.chop, d.chop, 'docker_layers')
+        Blob.new(d.chop, d.chop, 'docker_layers')
       end
       Dir.glob("*.json") do |json|
         next if json =~ /manifest.json$/
@@ -205,7 +206,6 @@ module DockerImagePackaging
     IO.write(File.join(package_dir, 'spec'), spec.to_yaml)
     IO.write(File.join(package_dir, 'packaging'), packaging_script)
   end
-
 
   def packaging_script
     <<-END.gsub(/^ {6}/, '')

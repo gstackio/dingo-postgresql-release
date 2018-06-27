@@ -1,61 +1,61 @@
 ---
-ruby/yaml-0.1.6.tar.gz:
-  object_id: cf573004-2371-454c-92d9-e13d4d40c390
-  sha: f3d404e11bec3c4efcddfd14c42d46f1aabe0b5d
-  size: 503012
-haproxy/haproxy-1.5.12.tar.gz:
-  object_id: d7e294eb-0bbf-4f0e-8023-83e9bf0199bf
-  sha: c488f7f108ddefb558bd86e7cbc1b71636ada856
-  size: 1344813
-haproxy/pcre-8.37.tar.gz:
-  object_id: 6415ba21-20ed-4056-adb3-16e6c0589d3e
-  sha: 4a24a20c61347d8da4edc86d5475aaf70ac146bb
-  size: 2041593
-jq/jq-linux64-1.5:
-  object_id: 0c840686-ab51-44a6-8b96-fc7088555f60
-  sha: d8e36831c3c94bb58be34dd544f44a6c6cb88568
-  size: 3027945
-postgresql/postgresql-9.4.5.tar.gz:
-  object_id: 9053fd48-6bd0-4d23-ae34-5301b53e6862
-  sha: 5278d04093f3cb2e00796fae15b2e33406844d01
-  size: 23211720
-ruby/bundler-1.10.6.gem:
-  object_id: '0638bf3c-9923-49c4-8adf-7ed4ee7fbcb3'
-  sha: 55a37fccd1c0cb5542d468e35d3be46dd0667f73
-  size: 251392
-ruby/ruby-2.2.3.tar.gz:
-  object_id: 2fbedcac-d374-42b1-9360-da51a8c022fa
-  sha: 0d9e158534cb31e72740138b8f697b57b448e5c3
-  size: 16626772
-ruby/rubygems-2.5.0.tgz:
-  object_id: 8a40b429-988a-4ae8-a4c5-593fdffd4469
-  sha: 03613d7013b61ecabef2424221438a692e53bbfc
-  size: 467978
-cf-cli/cf-cli_6.16.1_linux_x86-64.tgz:
-  object_id: 14c97fd9-483c-4820-a0e2-216e39cfa96c
-  sha: ad1782a564c5bf47270e1bfbe0fdd1298394a1d0
-  size: 6104120
-docker/docker-1.11.0.tgz:
-  object_id: 3b4bdfba-f53b-47a1-aa7e-230032903db6
-  sha: 242b6a3e6def6719f5002a4d3d5b35e587036c4e
-  size: 20520756
-golang/go1.6.2.linux-amd64.tar.gz:
-  object_id: 2f661769-6342-4424-99e3-bd739d293631
-  sha: b8318b09de06076d5397e6ec18ebef3b45cd315d
-  size: 84840658
-confd/confd-0.11.0-linux-amd64:
-  object_id: f99a9071-86a8-4f2c-aa8b-21c5b605172d
-  sha: dd4479abccb24564827dcf14fcb73ccc5bba8aeb
-  size: 9670104
 awscli/awscli-bundle-1.10.15.zip:
+  size: 7070412
   object_id: 481a89b8-faac-4cd7-b59a-e9924a89102d
   sha: fbd9fdac35012c18812737cf29db1f03ce4baa10
-  size: 7070412
-python/Python-2.7.8.tgz:
-  object_id: e878665c-41de-47a5-9ffb-02185632c070
-  sha: 511960dd78451a06c9df76509635aeec05b2051a
-  size: 14846119
+cf-cli/cf-cli_6.16.1_linux_x86-64.tgz:
+  size: 6104120
+  object_id: 14c97fd9-483c-4820-a0e2-216e39cfa96c
+  sha: ad1782a564c5bf47270e1bfbe0fdd1298394a1d0
+confd/confd-0.11.0-linux-amd64:
+  size: 9670104
+  object_id: f99a9071-86a8-4f2c-aa8b-21c5b605172d
+  sha: dd4479abccb24564827dcf14fcb73ccc5bba8aeb
 ctop/ctop-0.4.1-linux-amd64:
+  size: 5543152
   object_id: eaf7142b-1ca5-4465-a61a-53e2045b3221
   sha: ebf36705ccd9e3b9a7dfc6756fac81d9df8d4355
-  size: 5543152
+docker/docker-1.11.0.tgz:
+  size: 20520756
+  object_id: 3b4bdfba-f53b-47a1-aa7e-230032903db6
+  sha: 242b6a3e6def6719f5002a4d3d5b35e587036c4e
+golang/go1.6.2.linux-amd64.tar.gz:
+  size: 84840658
+  object_id: 2f661769-6342-4424-99e3-bd739d293631
+  sha: b8318b09de06076d5397e6ec18ebef3b45cd315d
+haproxy/haproxy-1.5.12.tar.gz:
+  size: 1344813
+  object_id: d7e294eb-0bbf-4f0e-8023-83e9bf0199bf
+  sha: c488f7f108ddefb558bd86e7cbc1b71636ada856
+haproxy/pcre-8.37.tar.gz:
+  size: 2041593
+  object_id: 6415ba21-20ed-4056-adb3-16e6c0589d3e
+  sha: 4a24a20c61347d8da4edc86d5475aaf70ac146bb
+jq/jq-linux64-1.5:
+  size: 3027945
+  object_id: 0c840686-ab51-44a6-8b96-fc7088555f60
+  sha: d8e36831c3c94bb58be34dd544f44a6c6cb88568
+postgresql/postgresql-9.4.5.tar.gz:
+  size: 23211720
+  object_id: 9053fd48-6bd0-4d23-ae34-5301b53e6862
+  sha: 5278d04093f3cb2e00796fae15b2e33406844d01
+python/Python-2.7.8.tgz:
+  size: 14846119
+  object_id: e878665c-41de-47a5-9ffb-02185632c070
+  sha: 511960dd78451a06c9df76509635aeec05b2051a
+ruby/bundler-1.10.6.gem:
+  size: 251392
+  object_id: '0638bf3c-9923-49c4-8adf-7ed4ee7fbcb3'
+  sha: 55a37fccd1c0cb5542d468e35d3be46dd0667f73
+ruby/ruby-2.2.3.tar.gz:
+  size: 16626772
+  object_id: 2fbedcac-d374-42b1-9360-da51a8c022fa
+  sha: 0d9e158534cb31e72740138b8f697b57b448e5c3
+ruby/rubygems-2.5.0.tgz:
+  size: 467978
+  object_id: 8a40b429-988a-4ae8-a4c5-593fdffd4469
+  sha: 03613d7013b61ecabef2424221438a692e53bbfc
+ruby/yaml-0.1.6.tar.gz:
+  size: 503012
+  object_id: cf573004-2371-454c-92d9-e13d4d40c390
+  sha: f3d404e11bec3c4efcddfd14c42d46f1aabe0b5d

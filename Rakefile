@@ -41,7 +41,7 @@ namespace :images do
 
         required_blobs.each do |b|
           unless existing_layers.include?(b.target)
-            sh "bosh add blob #{b.blob_target(dir)} #{b.prefix}"
+            sh "bosh add-blob #{b.blob_target(dir)} #{b.package_spec_path}"
           end
           required_layers << b.target
         end

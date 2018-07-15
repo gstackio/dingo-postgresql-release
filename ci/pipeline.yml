@@ -25,13 +25,13 @@ jobs:
   plan:
   - aggregate:
     - {get: boshrelease-ci}
-    - {get: boshrelease, resource: boshrelease-pg95-image, trigger: true, params: {submodules: none}}
+    - {get: dockerfile-repo, resource: boshrelease-pg95-image, trigger: true, params: {submodules: none}}
     - {get: patroni, resource: patroni, trigger: true}
     - {get: pg95-base-image-latest, passed: [build-pg95-base-image], trigger: true, params: {skip_download: true}}
   - task: prepare-dockerfile
     file: boshrelease-ci/ci/tasks/prepare-dockerfile.yml
     params:
-      dockerfile_root: boshrelease/images/postgresql95-patroni
+      dockerfile_root: dockerfile-repo/images/postgresql95-patroni
   - put: pg95-image-pre-test
     params:
       build: dockerfile

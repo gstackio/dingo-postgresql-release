@@ -5,6 +5,7 @@ LABEL "original-author"="Dr Nic Williams" \
 
 ENV PG_VERSION=9.5 \
     POSTGIS_VERSION=2.2 \
+    WAL_E_VERSION=0.9.2 \
     JQ_VERSION=1.5 \
     DUMB_INIT_VERSION=1.1.1
 
@@ -24,7 +25,7 @@ RUN \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN pip install pip --upgrade \
-      && pip install wal-e==0.9.2 awscli --upgrade
+      && python -m pip install --upgrade wal-e==${WAL_E_VERSION} awscli
 
 RUN wget -O /usr/local/bin/jq https://github.com/stedolan/jq/releases/download/jq-${JQ_VERSION}/jq-linux64 \
       && chmod +x /usr/local/bin/jq \

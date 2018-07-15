@@ -8,11 +8,12 @@ ENV PG_VERSION=9.5 \
     JQ_VERSION=1.5 \
     DUMB_INIT_VERSION=1.1.1
 
-RUN DEBIAN_FRONTEND=noninteractive \
+RUN \
     wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
     && echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main ${PG_VERSION}" > /etc/apt/sources.list.d/pgdg.list \
-    && apt-get update -y \
-    && apt-get install -y python python-dev python-pip lzop pv \
+    && apt-get -y -q update \
+    && DEBIAN_FRONTEND=noninteractive apt-get -y install -o Dpkg::Options::="--force-confnew" \
+    python python-dev python-pip lzop pv \
     daemontools libpq-dev \
     postgresql-${PG_VERSION} \
     postgresql-${PG_VERSION}-postgis-${POSTGIS_VERSION} \

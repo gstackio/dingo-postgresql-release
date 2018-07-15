@@ -1,0 +1,241 @@
+name: dingo-postgresql
+
+instance_groups:
+- name: etcd
+  azs: [z1, z2, z3]
+  instances: 1
+  persistent_disk_type: default
+  vm_type: default
+  stemcell: default
+  update: {serial: true, max_in_flight: 1}
+  networks: [{name: default}]
+  jobs:
+  - name: etcd
+    release: etcd
+    provides:
+      etcd:
+        as: etcd_server
+    properties:
+      etcd:
+        peer_require_ssl: false
+        require_ssl: false
+        heartbeat_interval_in_milliseconds: 50
+
+- name: cell
+  azs: [z1, z2]
+  migrated_from:
+  - {name: cell_z1, az: z1}
+  - {name: cell_z2, az: z2}
+  instances: 4
+  persistent_disk_type: default
+  vm_type: default
+  stemcell: default
+  networks: [{name: default}]
+  update: {serial: true, max_in_flight: 1}
+  jobs:
+  # ship all the logs
+  - name: remote-syslog
+    release: simple-remote-syslog
+  # run docker daemon
+  - name: docker
+    release: docker
+    properties:
+      tcp_address: 0.0.0.0
+      tls_cacert: "((docker-tls.ca))"
+      tls_cert: "((docker-tls.certificate))"
+      tls_key: "((docker-tls.private_key))"
+  # docker images will be pulled down
+  - name: upstream-images
+    release: dingo-postgresql
+  # run registrator daemon
+  - name: registrator
+    release: dingo-postgresql
+    consumes:
+      etcd:
+        from: etcd_server
+  # create uuid for each broker/daemon
+  - name: container-env-vars
+    release: dingo-postgresql
+  # run cell's local broker/agent
+  - name: cf-containers-broker
+    release: docker
+    provides:
+      cf-containers-broker:
+        as: cell-agent
+    properties:
+      username: cellbroker
+      password: ((cellbroker_password))
+      cookie_secret: ((cell_cookie_secret))
+      max_containers: ((cell_max_containers))
+      fetch_images: true
+      update_containers: true
+      services:
+      - name: dingo-postgresql
+        id: beb5973c-e1b2-11e5-a736-c7c0b526363d
+        bindable: true
+        description: Dedicated PostgreSQL 9.5
+        tags: [postgresql, postgresql95, sql]
+        plans:
+        - name: cluster
+          id: 1545e30e-6dc3-11e5-826a-6c4008a663f0
+          description: Dedicated, highly-available cluster that is continously archived
+          free: true
+          metadata:
+            bullets:
+            - PostgreSQL 9.5
+            - Dedicated secure containers
+            - Highly-available cluster across availability zones
+            - Continuously archived for potential disaster recovery
+            displayname: Cluster
+          container:
+            backend: docker
+            image: dingotiles/dingo-postgresql95
+            tag: 0.10.2
+            environment:
+            - AWS_ACCESS_KEY_ID=((backups_database_storage_aws_access_key_id))
+            - AWS_SECRET_ACCESS_KEY=((backups_clusterdata_aws_secret_access_key))
+            - WAL_S3_BUCKET=((backups_database_storage_bucket_name))
+            - AWS_REGION=((backups_database_storage_region))
+            - WALE_BACKUP_THRESHOLD_PERCENTAGE=30
+            - WALE_BACKUP_THRESHOLD_MEGABYTES=10240
+            persistent_volumes:
+            - /data
+
+- name: router
+  azs: [z1, z2, z3]
+  instances: 1
+  vm_type: default
+  stemcell: default
+  networks: [name: default]
+  jobs:
+  - name: remote-syslog
+    release: simple-remote-syslog
+  - name: broker
+    release: dingo-postgresql
+    consumes:
+      cell:
+        from: cell-agent
+      cell_z2: nil
+    provides:
+      servicebroker:
+        as: broker
+        shared: true
+    properties:
+      username: broker
+      password: ((servicebroker_password))
+      backups:
+        clusterdata:
+          bucket_name: ((backups_clusterdata_bucket_name))
+          region: ((backups_clusterdata_region))
+          aws_access_key_id: ((backups_clusterdata_aws_access_key_id))
+          aws_secret_access_key: ((backups_clusterdata_aws_secret_access_key))
+        database_storage:
+          bucket_name: ((backups_database_storage_bucket_name))
+          region: ((backups_database_storage_region))
+          aws_access_key_id: ((backups_database_storage_aws_access_key_id))
+          aws_secret_access_key: ((backups_database_storage_aws_secret_access_key))
+      cf:
+        api_url: https://api.((cf_system_domain))
+        username: ((cf_admin_username))
+        password: ((cf_admin_password))
+        skip_ssl_validation: ((cf_skip_ssl_validation))
+  - name: router
+    release: dingo-postgresql
+    consumes:
+      servicebroker:
+        from: broker
+  - name: dpg-cli
+    release: dingo-postgresql
+    consumes:
+      servicebroker:
+        from: broker
+
+- name: sanity-test
+  instances: 1
+  lifecycle: errand
+  azs: [z1, z2, z3]
+  vm_type: default
+  stemcell: default
+  networks: [{name: default}]
+  jobs:
+  - name: sanity-test
+    release: dingo-postgresql
+    consumes:
+      servicebroker:
+        from: broker
+
+- name: integration-test
+  instances: 1
+  lifecycle: errand
+  azs: [z1, z2, z3]
+  vm_type: default
+  stemcell: default
+  networks: [{name: default}]
+  jobs:
+  - name: integration-test
+    release: dingo-postgresql
+    consumes:
+      servicebroker:
+        from: broker
+
+- name: disaster-recovery
+  instances: 1
+  lifecycle: errand
+  azs: [z1, z2, z3]
+  vm_type: default
+  stemcell: default
+  networks: [{name: default}]
+  jobs:
+  - name: disaster-recovery
+    release: dingo-postgresql
+    consumes:
+      servicebroker:
+        from: broker
+
+update:
+  canaries: 0
+  max_in_flight: 1
+  serial: true
+  canary_watch_time: 1000-60000
+  update_watch_time: 1000-60000
+
+variables:
+- name: servicebroker_password
+  type: password
+- name: cellbroker_password
+  type: password
+- name: cell_cookie_secret
+  type: password
+- name: docker-ca
+  type: certificate
+  options:
+    is_ca: true
+    common_name: dockerCA
+- name: docker-tls
+  type: certificate
+  options:
+    ca: docker-ca
+    common_name: docker
+    extended_key_usage:
+    - client_auth
+
+stemcells:
+- alias: default
+  os: ubuntu-trusty
+  version: 3363.latest
+
+releases:
+- name: dingo-postgresql
+  version: latest
+- name: simple-remote-syslog
+  version: 2.2.1
+  url: https://bosh.io/d/github.com/cloudfoundry-community/simple-remote-syslog-boshrelease?v=2.2.1
+  sha1: 17f8fbd534599920e7e86ca87fcceabe63cf2a71
+- name: etcd
+  version: 95.2
+  url: https://github.com/dingotiles/etcd2-boshrelease/releases/download/v95.2/etcd-95.2.tgz
+  sha1: 1b449036b25e302ab1a56965a6861dc1b4ed9516
+- name: docker
+  version: 30.1.0
+  url: https://github.com/cloudfoundry-community/docker-boshrelease/releases/download/v30.1.0/docker-30.1.0.tgz
+  sha1: bcc2e859836415c37b5a668eff5d17761e5321b5

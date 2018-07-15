@@ -5,7 +5,7 @@ meta:
   etcd:
     host: 10.244.4.2
 
-jobs:
+instance_groups:
   - name: cell_z1
     networks:
       - name: patroni1
@@ -18,22 +18,14 @@ jobs:
     networks:
       - name: router1
         static_ips: (( static_ips(0,1,2,3) ))
-    properties:
-      servicebroker:
-        router:
-          hostname: (( grab jobs.router.networks.router1.static_ips.[0] ))
-        backends:
-          machines:
-            z1: (( grab jobs.cell_z1.networks.patroni1.static_ips ))
-            z2: (( grab jobs.cell_z2.networks.patroni2.static_ips ))
+    jobs:
+    - name: broker
+      properties:
+        advertised_hostname: (( grab instance_groups.router.networks.router1.static_ips.[0] ))
   - name: sanity-test
     properties:
       servicebroker:
-        machines: (( grab jobs.router.networks.router1.static_ips ))
-
-properties:
-  servicebroker:
-    host: (( grab jobs.router.networks.router1.static_ips.[0] ))
+        machines: (( grab instance_groups.router.networks.router1.static_ips ))
 
 compilation:
   cloud_properties: {name: random}

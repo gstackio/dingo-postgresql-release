@@ -1,7 +1,7 @@
 ---
 groups:
 - name: pipeline
-  jobs: [rc, bosh-rc, testflight, integration, deploy-vsphere, shipit, shipit-rc, minor, major, patch]
+  jobs: [rc, bosh-rc, testflight, testflight-bosh2, integration, integration-bosh2, deploy-vsphere, shipit, shipit-rc, minor, major, patch]
 - name: patroni-images
   jobs: [build-pg95-base-image, build-pg95-image, docker-machine-setup, test-95-image]
 - name: ci-image
@@ -90,22 +90,7 @@ jobs:
   serial_groups: [bosh-lite-testflight]
   plan:
   - aggregate:
-    - do:
-      - {get: boshrelease-ci}
-      # - aggregate:
-      #   - task: delete-testflight
-      #     file: boshrelease-ci/ci/tasks/delete-testflight.yml
-      #     params:
-      #       deployment_name: dingo-postgresql-testflight
-      #       bosh_target: {{bosh-lite-testflight-target}}
-      #       bosh_username: {{bosh-lite-username}}
-      #       bosh_password: {{bosh-lite-password}}
-      #   - task: delete-orphaned-disks-testflight
-      #     file: boshrelease-ci/ci/tasks/delete-orphaned-disks-testflight.yml
-      #     params:
-      #       bosh_target: {{bosh-lite-testflight-target}}
-      #       bosh_username: {{bosh-lite-username}}
-      #       bosh_password: {{bosh-lite-password}}
+    - {get: boshrelease-ci}
     - {get: boshrelease, passed: [bosh-rc], trigger: true}
     - {get: version, passed: [bosh-rc], trigger: true}
     - {get: candidate-release, passed: [bosh-rc], trigger: true}
@@ -122,7 +107,7 @@ jobs:
       VAULT_PREFIX: {{bosh-lite-testflight-vault-prefix}}
       GITHUB_TOKEN: {{github-release-access-token}}
   - task: create-lite-manifest
-    file: boshrelease-ci/ci/tasks/create-manifest.yml
+    file: boshrelease-ci/ci/tasks/create-manifest-bosh1.yml
     params:
       deployment_name: dingo-postgresql-testflight
       bosh_syslog_host: {{bosh-lite-syslog-host}}
@@ -132,8 +117,8 @@ jobs:
       backups_bucket: {{backups-testflight-backups-bucket}}
       clusterdata_bucket: {{backups-testflight-clusterdata-bucket}}
       region: {{backups-testflight-s3-region}}
-      docker_image_image: "dingotiles/dingo-postgresql95"
-      docker_image_tag: "edge"
+      docker_image_image: dingotiles/dingo-postgresql95
+      docker_image_tag: edge
       docker_image_source: upstream
   - put: lite-deployment-testflight
     params:
@@ -155,9 +140,50 @@ jobs:
         bosh_target: {{bosh-lite-testflight-target}}
         bosh_username: {{bosh-lite-username}}
         bosh_password: {{bosh-lite-password}}
+
+- name: testflight-bosh2
+  public: true
+  serial_groups: [bosh-lite-testflight-bosh2]
+  plan:
+  - aggregate:
+    - {get: boshrelease-ci}
+    - {get: boshrelease, passed: [bosh-rc], trigger: true}
+    - {get: version, passed: [bosh-rc], trigger: true}
+    - {get: candidate-release, passed: [bosh-rc], trigger: true}
+    - {get: pg95-image-edge, params: {skip_download: true}}
+    - {get: docker-image-registrator, trigger: true, params: {skip_download: true}}
+    - {get: etcd}
+    - {get: simple-remote-syslog}
+    - {get: lite-stemcell}
+  - task: director-creds
+    file: boshrelease-ci/ci/tasks/director-creds.yml
+    params:
+      VAULT_ADDR: {{vault-addr}}
+      VAULT_SKIP_VERIFY: 1
+      VAULT_PREFIX: {{bosh-lite-testflight-bosh2-vault-prefix}}
+      GITHUB_TOKEN: {{github-release-access-token}}
+  - task: bosh2-deploy
+    file: boshrelease-ci/ci/tasks/bosh2-deploy.yml
+    params:
+      deployment_name: dingo-postgresql-testflight-bosh2
+      deployment_router_static_ip: 10.244.0.20
+      router_public_ip: 10.244.0.20
+      aws_access_key: {{dingotiles-aws-access}}
+      aws_secret_key: {{dingotiles-aws-secret}}
+      backups_bucket: {{backups-testflight-backups-bucket}}
+      clusterdata_bucket: {{backups-testflight-clusterdata-bucket}}
+      region: {{backups-testflight-s3-region}}
+      docker_image_image: dingotiles/dingo-postgresql95
+      docker_image_tag: edge
+      cf_system_domain: {{testflight-bosh2-cf_system_domain}}
+      cf_admin_password: {{testflight-bosh2-cf_admin_password}}
+      cf_admin_username: {{testflight-bosh2-cf_admin_username}}
+      cf_skip_ssl_validation: {{testflight-bosh2-cf_skip_ssl_validation}}
+      test_errand: sanity-test
+
 - name: integration
   public: true
-  serial_groups: [bosh-lite-integration]
+  serial_groups: [test-cf-snw, bosh-lite-integration]
   plan:
   - aggregate:
     - do:
@@ -192,7 +218,7 @@ jobs:
       VAULT_PREFIX: {{bosh-lite-integration-vault-prefix}}
       GITHUB_TOKEN: {{github-release-access-token}}
   - task: create-lite-manifest
-    file: boshrelease-ci/ci/tasks/create-manifest.yml
+    file: boshrelease-ci/ci/tasks/create-manifest-bosh1.yml
     params:
       deployment_name: dingo-postgresql-testflight
       bosh_target: {{bosh-lite-integration-target}}
@@ -219,6 +245,14 @@ jobs:
   - aggregate:
     - task: prepare-disaster-recovery
       file: boshrelease-ci/ci/tasks/prepare-disaster-recovery.yml
+      params:
+        broker_host: 10.58.111.47
+        broker_port: 8888
+        router_public_ip: 10.58.111.47
+        cf_system_domain: system.test-cf.snw
+        cf_admin_username: admin
+        cf_admin_password: A8tb4yRlQ3BmKmc1TQSCgiN7rAQXiQ73PkeoyI1qGTHq8y523kPZWjGyedjal6kx
+        cf_skip_ssl_validation: true
     - do:
       - put: disaster-recovery
         resource: lite-errand-integration
@@ -246,6 +280,12 @@ jobs:
             bosh_password: {{bosh-lite-password}}
   - task: assert-disaster-recovery
     file: boshrelease-ci/ci/tasks/assert-disaster-recovery.yml
+    params:
+      router_public_ip: 10.58.111.47
+      cf_system_domain: system.test-cf.snw
+      cf_admin_username: admin
+      cf_admin_password: A8tb4yRlQ3BmKmc1TQSCgiN7rAQXiQ73PkeoyI1qGTHq8y523kPZWjGyedjal6kx
+      cf_skip_ssl_validation: true
     on_failure:
       task: show-broker-logs
       file: boshrelease-ci/ci/tasks/show-broker-logs.yml
@@ -253,6 +293,98 @@ jobs:
         bosh_target: {{bosh-lite-integration-target}}
         bosh_username: {{bosh-lite-username}}
         bosh_password: {{bosh-lite-password}}
+
+- name: integration-bosh2
+  public: true
+  serial_groups: [bosh-lite-integration-bosh2]
+  plan:
+  - aggregate:
+    - {get: boshrelease-ci}
+    - {get: boshrelease, passed: [testflight-bosh2]}
+    - {get: version, passed: [testflight-bosh2]}
+    - {get: pg95-image-edge, passed: [testflight-bosh2], trigger: true, params: {skip_download: true}}
+    - {get: candidate-release, passed: [testflight-bosh2], trigger: true}
+    # TODO: currently am using etcd2-boshrelease with its links support on .49
+    - {get: etcd, passed: [testflight-bosh2]}
+    - {get: simple-remote-syslog, passed: [testflight-bosh2]}
+    - {get: docker-image-registrator, passed: [testflight-bosh2], trigger: true, params: {skip_download: true}}
+    - {get: lite-stemcell, passed: [testflight-bosh2]}
+  - task: director-creds
+    file: boshrelease-ci/ci/tasks/director-creds.yml
+    params:
+      VAULT_ADDR: {{vault-addr}}
+      VAULT_SKIP_VERIFY: 1
+      VAULT_PREFIX: {{bosh-lite-testflight-bosh2-vault-prefix}}
+      GITHUB_TOKEN: {{github-release-access-token}}
+  - task: bosh2-deploy
+    file: boshrelease-ci/ci/tasks/bosh2-deploy.yml
+    params:
+      deployment_name: dingo-postgresql-integration-bosh2
+      delete_deployment_first: true
+      deployment_router_static_ip: 10.244.0.21
+      router_public_ip: 10.58.111.49
+      aws_access_key: {{dingotiles-aws-access}}
+      aws_secret_key: {{dingotiles-aws-secret}}
+      backups_bucket: {{backups-testflight-backups-bucket}}
+      clusterdata_bucket: {{backups-testflight-clusterdata-bucket}}
+      region: {{backups-testflight-s3-region}}
+      docker_image_image: dingotiles/dingo-postgresql95
+      docker_image_tag: edge
+      cf_system_domain: {{testflight-bosh2-cf_system_domain}}
+      cf_admin_password: {{testflight-bosh2-cf_admin_password}}
+      cf_admin_username: {{testflight-bosh2-cf_admin_username}}
+      cf_skip_ssl_validation: {{testflight-bosh2-cf_skip_ssl_validation}}
+  - aggregate:
+    - task: prepare-disaster-recovery
+      file: boshrelease-ci/ci/tasks/prepare-disaster-recovery.yml
+      params:
+        broker_host: 10.58.111.49
+        broker_port: 8821
+        router_public_ip: 10.58.111.49
+        cf_system_domain: {{testflight-bosh2-cf_system_domain}}
+        cf_admin_password: {{testflight-bosh2-cf_admin_password}}
+        cf_admin_username: {{testflight-bosh2-cf_admin_username}}
+        cf_skip_ssl_validation: {{testflight-bosh2-cf_skip_ssl_validation}}
+    - do:
+      - put: disaster-recovery
+        resource: lite-errand-integration-bosh2
+        params:
+          manifest: manifest/manifest.yml
+          errand: integration-test
+        # on_failure:
+        #   task: show-broker-logs
+        #   file: boshrelease-ci/ci/tasks/show-broker-logs.yml
+        #   params:
+        #     bosh_target: {{bosh-lite-integration-target}}
+        #     bosh_username: {{bosh-lite-username}}
+        #     bosh_password: {{bosh-lite-password}}
+      - put: disaster-recovery
+        resource: lite-errand-integration-bosh2
+        params:
+          manifest: manifest/manifest.yml
+          errand: disaster-recovery
+        # on_failure:
+        #   task: show-broker-logs
+        #   file: boshrelease-ci/ci/tasks/show-broker-logs.yml
+        #   params:
+        #     bosh_target: {{bosh-lite-integration-target}}
+        #     bosh_username: {{bosh-lite-username}}
+        #     bosh_password: {{bosh-lite-password}}
+  - task: assert-disaster-recovery
+    file: boshrelease-ci/ci/tasks/assert-disaster-recovery.yml
+    params:
+      router_public_ip: 10.58.111.49
+      cf_system_domain: {{testflight-bosh2-cf_system_domain}}
+      cf_admin_password: {{testflight-bosh2-cf_admin_password}}
+      cf_admin_username: {{testflight-bosh2-cf_admin_username}}
+      cf_skip_ssl_validation: {{testflight-bosh2-cf_skip_ssl_validation}}
+    # on_failure:
+    #   task: show-broker-logs
+    #   file: boshrelease-ci/ci/tasks/show-broker-logs.yml
+    #   params:
+    #     bosh_target: {{bosh-lite-integration-target}}
+    #     bosh_username: {{bosh-lite-username}}
+    #     bosh_password: {{bosh-lite-password}}
 
 # - name: bump-image-layers
 #   public: true
@@ -321,11 +453,11 @@ jobs:
   plan:
   - aggregate:
     - {get: boshrelease-ci}
-    - {get: boshrelease, passed: [integration, deploy-vsphere]}
-    - {get: candidate-release, passed: [integration, deploy-vsphere]}
-    - {get: etcd, passed: [integration, deploy-vsphere]}
-    - {get: simple-remote-syslog, passed: [integration, deploy-vsphere]}
-    - {get: version, passed: [deploy-vsphere], params: {bump: final}}
+    - {get: boshrelease, passed: [integration, integration-bosh2, deploy-vsphere]}
+    - {get: candidate-release, passed: [integration, integration-bosh2, deploy-vsphere]}
+    - {get: etcd, passed: [integration, integration-bosh2, deploy-vsphere]}
+    - {get: simple-remote-syslog, passed: [integration, integration-bosh2, deploy-vsphere]}
+    - {get: version, passed: [integration, integration-bosh2, deploy-vsphere], params: {bump: final}}
   - aggregate:
     # - do:
     #   - {get: pg95-image-edge, passed: [deploy-vsphere], params: {save: true}}
@@ -385,11 +517,11 @@ jobs:
   plan:
   - aggregate:
     - {get: boshrelease-ci}
-    - {get: boshrelease, passed: [integration, deploy-vsphere]}
-    - {get: candidate-release, passed: [integration, deploy-vsphere]}
-    - {get: etcd, passed: [integration, deploy-vsphere]}
-    - {get: simple-remote-syslog, passed: [integration, deploy-vsphere]}
-    - {get: version, passed: [integration, deploy-vsphere]}
+    - {get: boshrelease, passed: [integration, integration-bosh2, deploy-vsphere]}
+    - {get: candidate-release, passed: [integration, integration-bosh2, deploy-vsphere]}
+    - {get: etcd, passed: [integration, integration-bosh2, deploy-vsphere]}
+    - {get: simple-remote-syslog, passed: [integration, integration-bosh2, deploy-vsphere]}
+    - {get: version, passed: [integration, integration-bosh2, deploy-vsphere]}
   - aggregate:
     # - do:
     #   - {get: pg95-image-edge, passed: [deploy-vsphere], params: {save: true}}
@@ -510,6 +642,7 @@ resources:
     access_token: {{github-release-access-token}}
     user: dingotiles
     repository: dingo-postgresql-release
+    drafts: true
 
 - name: boshrelease-trigger
   type: git
@@ -648,6 +781,14 @@ resources:
 - name: lite-errand-integration
   type: bosh-errand
   source: *lite-integration-defaults
+
+- name: lite-errand-integration-bosh2
+  type: bosh-errand
+  source:
+    target: 10.58.111.49
+    username: admin
+    password: admin
+    deployment: dingo-postgresql-integration-bosh2
 
 - name: vsphere-stemcell
   type: bosh-io-stemcell

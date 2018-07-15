@@ -25,16 +25,39 @@ case $1 in
       echo "bosh" > ${DPG_DIR}/current
     fi
     mkdir -p ${BOSH_DPG_DIR}
-    echo "<%= p('servicebroker.machines').first %>:<%= p('servicebroker.port') %>" > ${BOSH_DPG_DIR}/broker_endpoint
-    echo "<%= p('servicebroker.username') %>" > ${BOSH_DPG_DIR}/broker_username
-    echo "<%= p('servicebroker.password') %>" > ${BOSH_DPG_DIR}/broker_password
 
-    echo "<%= p('etcd.machines').first %>:4001" > ${BOSH_DPG_DIR}/etcd_endpoint
+    <%
+      servicebroker_machine = nil
+      broker = link("servicebroker")
+      servicebroker_machine = broker.instances.first.address
 
-    echo "<%= p('cf.api_url') %>" > ${BOSH_DPG_DIR}/cf_endpoint
-    echo "<%= p('cf.username') %>" > ${BOSH_DPG_DIR}/cf_username
-    echo "<%= p('cf.password') %>" > ${BOSH_DPG_DIR}/cf_password
-    <% if p("cf.skip_ssl_validation") %>
+      servicebroker_port     = broker.p("port")
+      servicebroker_username = broker.p("username")
+      servicebroker_password = broker.p("password")
+      cf_endpoint            = broker.p("cf.api_url")
+      cf_username            = broker.p("cf.username")
+      cf_password            = broker.p("cf.password")
+      cf_skip_ssl_validation = broker.p("cf.skip_ssl_validation")
+
+      servicebroker_machine ||= p("servicebroker.machines").first
+    -%>
+    echo "<%= servicebroker_machine %>:<%= servicebroker_port %>" > ${BOSH_DPG_DIR}/broker_endpoint
+    echo "<%= servicebroker_username %>" > ${BOSH_DPG_DIR}/broker_username
+    echo "<%= servicebroker_password %>" > ${BOSH_DPG_DIR}/broker_password
+
+    <%
+      etcd_machine = nil
+      if_p("etcd.machines") do |machines|
+        etcd_machine = machines.first
+      end
+      etcd_machine ||= link("etcd").instances.first.address
+    -%>
+    echo "<%= etcd_machine %>:4001" > ${BOSH_DPG_DIR}/etcd_endpoint
+
+    echo "<%= cf_endpoint %>" > ${BOSH_DPG_DIR}/cf_endpoint
+    echo "<%= cf_username %>" > ${BOSH_DPG_DIR}/cf_username
+    echo "<%= cf_password %>" > ${BOSH_DPG_DIR}/cf_password
+    <% if cf_skip_ssl_validation %>
     touch ${BOSH_DPG_DIR}/cf_skip_ssl_validation
     <% else %>
     rm -f ${BOSH_DPG_DIR}/cf_skip_ssl_validation

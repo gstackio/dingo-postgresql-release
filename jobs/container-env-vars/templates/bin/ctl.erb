@@ -25,8 +25,7 @@ export LANG=en_US.UTF-8
     end
     network.ip
   end
-%>
-
+-%>
 case $1 in
 
   start)
@@ -36,7 +35,7 @@ case $1 in
     # store pid in $PIDFILE
     echo $$ > $PIDFILE
 
-    env_var_dir='<%= p("broker.container_env_var_dir") %>'
+    env_var_dir='<%= p("container_env_var_dir") %>'
     mkdir -p ${env_var_dir}
     rm -rf ${env_var_dir}/*
 
@@ -47,6 +46,15 @@ case $1 in
 
     export CELL_GUID="<%= discover_external_ip %>"
     echo ${CELL_GUID} > ${env_var_dir}/CELL_GUID
+
+    <% if_link("etcd") do |etcd| -%>
+    export ETCD_HOST_PORT=<%= etcd.instances.first.address %>:4001
+    echo ${ETCD_HOST_PORT} > ${env_var_dir}/ETCD_HOST_PORT
+    <% end -%>
+    <% if_p("etcd.machines") do |machines| -%>
+    export ETCD_HOST_PORT=<%= machines.first %>:4001
+    echo ${ETCD_HOST_PORT} > ${env_var_dir}/ETCD_HOST_PORT
+    <% end -%>
 
     # do nothing forever
     exec tail -f /dev/null

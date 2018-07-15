@@ -13,18 +13,21 @@ templates:
   confd/confd.toml: confd/confd.toml
   confd/conf.d/router.toml: confd/conf.d/router.toml
   confd/templates/haproxy.tmpl: confd/templates/haproxy.tmpl
+
+consumes:
+- name: etcd
+  type: etcd_service
+  optional: true
+- name: servicebroker
+  type: servicebroker
+
 properties:
   etcd.machines:
-    description: hostnames for etcd servers
+    description: (if not using links) hostnames for etcd servers
 
-  servicebroker.machines:
-    description: hostnames for broker servers
   servicebroker.public_port:
     description: port to expose broker to router users
     default: 8888
-  servicebroker.port:
-    description: broker process runs on this port
-    default: 8889
 
   haproxy.syslog:
     description: Endpoint for sending haproxy logs

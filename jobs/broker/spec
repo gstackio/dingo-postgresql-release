@@ -19,35 +19,55 @@ templates:
   data/properties.sh.erb: data/properties.sh
   helpers/ctl_setup.sh: helpers/ctl_setup.sh
   helpers/ctl_utils.sh: helpers/ctl_utils.sh
+
+provides:
+- name: servicebroker
+  type: servicebroker
+  properties:
+  - username
+  - password
+  - port
+  - advertised_hostname
+  - services
+  - cf.api_url
+  - cf.username
+  - cf.password
+  - cf.skip_ssl_validation
+  - backups.clusterdata.aws_access_key_id
+  - backups.clusterdata.aws_secret_access_key
+  - backups.clusterdata.bucket_name
+  - backups.clusterdata.region
+  - backups.database_storage.aws_access_key_id
+  - backups.database_storage.aws_secret_access_key
+  - backups.database_storage.bucket_name
+  - backups.database_storage.region
+
+consumes:
+- name: etcd
+  type: etcd_service
+  optional: true
+- name: cell
+  type: servicebroker
+- name: cell_z2
+  type: servicebroker
+  optional: true
+
 properties:
-  etcd.machines:
-    description: hostnames for etcd servers
-
-  servicebroker.username:
+  username:
     description: Basic auth username for broker
-    default: starkandwayne
-  servicebroker.password:
+    default: broker
+  password:
     description: Basic auth password for broker
-    default: starkandwayne
 
-  servicebroker.port:
+  port:
     description: Bind port for inbound API requests
     default: 8889
 
-  servicebroker.router.hostname:
-    description: "Hostname to advertise in binding credentials for routers"
+  advertised_hostname:
+    description: "Hostname to advertise in binding credentials for routers (defaults to host IP)"
 
-  servicebroker.backends.machines:
-    description: "Hash of {z1: backend broker hostnames:port (NOTE: also becomes permanent GUID at the moment)}"
-  servicebroker.backends.username:
-    description: basic auth username to access each HTTP cf-container-broker backend
-    default: containers
-  servicebroker.backends.password:
-    description: basic auth password to access each HTTP cf-container-broker backend
-    default: containers
-
-  servicebroker.services:
-    description: The CF service broker catalog of services/plans
+  services:
+    description: "Services and plans offered by the backend cf-containers-brokers"
 
   backups.clusterdata.aws_access_key_id:
     description: Amazon S3 API access key
@@ -76,3 +96,6 @@ properties:
   cf.skip_ssl_validation:
     description: Set to true if Cloud Foundry API is using self-signed SSL certificate
     default: false
+
+  etcd.machines:
+    description: (if not using links) hostnames for etcd servers

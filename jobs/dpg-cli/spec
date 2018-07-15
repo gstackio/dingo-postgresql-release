@@ -12,25 +12,14 @@ templates:
   data/properties.sh.erb: data/properties.sh
   helpers/ctl_setup.sh: helpers/ctl_setup.sh
   helpers/ctl_utils.sh: helpers/ctl_utils.sh
+
+consumes:
+- name: etcd
+  type: etcd_service
+  optional: true
+- name: servicebroker
+  type: servicebroker
+
 properties:
-  servicebroker.machines:
-    description: hostnames for service broker servers
-  servicebroker.port:
-    description: port for service brokers to connect to
-  servicebroker.username:
-    description: username for service brokers to connect to
-  servicebroker.password:
-    description: password for service brokers to connect to
-
   etcd.machines:
-    description: hostnames for etcd servers
-
-  cf.api_url:
-    description: URI for Cloud Foundry API to allow lookup of user-provided service names after provisioning
-  cf.username:
-    description: Username for Cloud Foundry API access allow lookup of user-provided service names after provisioning
-  cf.password:
-    description: Username for Cloud Foundry API access allow lookup of user-provided service names after provisioning
-  cf.skip_ssl_validation:
-    description: Set to true if Cloud Foundry API is using self-signed SSL certificate
-    default: false
+    description: (if not using links) hostnames for etcd servers

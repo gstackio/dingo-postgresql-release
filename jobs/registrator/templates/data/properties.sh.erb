@@ -15,7 +15,14 @@ export DOCKER_USER="<%= p('docker.user') %>"
 # Group which will own the Docker services
 export DOCKER_GROUP="<%= p('docker.group') %>"
 
-export REGISTRATOR_BACKEND_URI="<%= p('registrator.backend_uri') %>"
+<%
+  etcd_machine = nil
+  if_p("etcd.machines") do |machines|
+    etcd_machine = machines.first
+  end
+  etcd_machine ||= link("etcd").instances.first.address
+-%>
+export REGISTRATOR_BACKEND_URI="etcd://<%= etcd_machine %>:4001"
 
 <%
   require 'json'
@@ -33,8 +40,7 @@ export REGISTRATOR_BACKEND_URI="<%= p('registrator.backend_uri') %>"
     end
     network.ip
   end
-%>
-
+-%>
 # export DNS_DOMAIN_NAME=<%= (spec.dns_domain_name.nil? || spec.dns_domain_name == "") ? "bosh" : spec.dns_domain_name %>
 # export DOCKER_HOSTNAME="<%= index %>.<%= name %>.<%= spec.networks.methods(false).grep(/[^=]$/).first.to_s %>.<%= spec.deployment %>.$DNS_DOMAIN_NAME"
 export DOCKER_HOSTNAME="<%= discover_external_ip %>"

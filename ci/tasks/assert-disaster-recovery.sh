@@ -7,16 +7,21 @@ source boshrelease-ci/ci/helpers/database.sh
 # To avoid 'WARNING: terminal is not fully functional'
 export PAGER=/bin/cat
 
-cf api api.system.test-cf.snw --skip-ssl-validation
-cf auth admin A8tb4yRlQ3BmKmc1TQSCgiN7rAQXiQ73PkeoyI1qGTHq8y523kPZWjGyedjal6kx
+: ${cf_system_domain:?required}
+: ${cf_admin_username:?required}
+: ${cf_admin_password:?required}
+: ${cf_skip_ssl_validation:?required}
+
+cf api api.$cf_system_domain --skip-ssl-validation
+cf auth $cf_admin_username $cf_admin_password
+
 cf create-org dr-test; cf target -o dr-test
 cf create-space dr-test
-
 set -e
 cf target -s dr-test
 
 cf service-key dr-test dr-test-binding
-pg_uri=$(cf service-key dr-test dr-test-binding | grep '"uri"' | grep -o 'postgres://.*/postgres' | sed "s/@.*:/@${router_ip}:/")
+pg_uri=$(cf service-key dr-test dr-test-binding | grep '"uri"' | grep -o 'postgres://.*/postgres' | sed "s/@.*:/@${router_public_ip:?required}:/")
 
 set +x
 wait_for_database $pg_uri

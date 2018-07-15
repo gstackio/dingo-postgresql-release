@@ -1,5 +1,7 @@
-FROM frodenas/ubuntu
-MAINTAINER Dr Nic Williams
+FROM gstack/ubuntu-trusty
+LABEL "original-author"="Dr Nic Williams" \
+      maintainer="Benjamin Gandon" \
+      organization="Gstack"
 
 ENV PG_VERSION=9.5 \
     POSTGIS_VERSION=2.2 \

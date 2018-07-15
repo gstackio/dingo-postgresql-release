@@ -11,7 +11,9 @@ ENV PG_VERSION=9.5 \
 RUN \
     wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
     && echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main ${PG_VERSION}" > /etc/apt/sources.list.d/pgdg.list \
+    && echo "----- UPDATE -----" \
     && apt-get -y -q update \
+    && echo "----- INSTALL -----" \
     && DEBIAN_FRONTEND=noninteractive apt-get -y install -o Dpkg::Options::="--force-confnew" \
     python python-dev python-pip lzop pv \
     daemontools libpq-dev \

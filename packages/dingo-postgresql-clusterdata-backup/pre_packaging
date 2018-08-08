@@ -1,4 +1,19 @@
+#!/usr/bin/env bash
+
 set -e # exit immediately if a simple command exits with a non-zero status
+
+# Workaround snippet to support chruby-based Ruby environments
+if which brew > /dev/null; then
+    source $(brew --prefix)/share/chruby/chruby.sh
+elif [[ -e /usr/local/share/chruby/chruby.sh ]]; then
+    source /usr/local/share/chruby/chruby.sh
+fi
+if ! which bundle > /dev/null; then
+    chruby 2.5.1
+fi
+
+
+
 set -u # report the usage of uninitialized variables
 
 cd ${BUILD_DIR}/dingo-postgresql-clusterdata-backup
